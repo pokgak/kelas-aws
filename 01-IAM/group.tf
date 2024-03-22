@@ -1,17 +1,5 @@
-provider "aws" {
-  profile = "pokgak-prod"
-}
-
-resource "aws_iam_user" "pokgak" {
-  name = "pokgak"
-}
-
-resource "aws_iam_user" "nazhan" {
-  name = "nazhan"
-}
-
 resource "aws_iam_group" "developers" {
-  name = "tester"
+  name = "developers"
 }
 
 resource "aws_iam_group_membership" "developers" {
@@ -24,4 +12,3 @@ resource "aws_iam_group_membership" "developers" {
 
   group = aws_iam_group.developers.name
 }
-
