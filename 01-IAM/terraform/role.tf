@@ -15,6 +15,15 @@ data "aws_iam_policy_document" "test_service_assume_role_policy" {
       ]
     }
   }
+
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "test_service" {
