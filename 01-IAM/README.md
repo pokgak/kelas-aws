@@ -112,6 +112,20 @@ Statement{
 }
 ```
 
+### Run our application again
+
+```
+$ ./test-app-linux
+Caller Identity:
+Account ID: 058264261389
+User ARN: arn:aws:sts::058264261389:assumed-role/test-service/i-00cb71844a241e4af
+User ID: AROAQ3EGSCMGZKW34J3QM:i-00cb71844a241e4af
+--------------------
+S3 Buckets:
+         pokgak-test-bucket
+         pokgak-test-bucket-2
+```
+
 ## Summary
 
 What we've done:
