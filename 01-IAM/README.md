@@ -1,79 +1,78 @@
-# IAM
+# Kelas AWS: IAM
 
-- Identity and Access Management (IAM) controls what users can and can't do
-- defined using AWS IAM policies
-- IAM policy consists of 3 parts:
-  - Actions
-  - Resource
-  - Principal (for resource-based policies)
-- concept: principle of least privilege
-- actions will be denied by default until there is a policy that allows it
+Goal: run an application that calls to an AWS service (S3)
 
-## Principals
+## Running our application
 
-- users, roles, other AWS services
-
-### Users
-
-- login to console using password
-- OR authenticate using access key ID and secret access key on CLI
-
-### Default and custom profile
-
-- `default` profile will be used by default if no profiles specified
-- we can specify the profile by either using the `--profile` CLI flag or `AWS_PROFILE` environment variable when running a command
-- calling AWS cli with no default profile will return error:
-  ```
-  Unable to locate credentials. You can configure credentials by running "aws configure".
-  ```
-
-### Groups
-
-- grant permissions to a group of users
-- why we need roles? (https://stackoverflow.com/q/63386524)
-  - security: temporary credentials
-  - users + group is account specific: less hassle managing users in multiple accounts with diff access keys
-
-### Roles
-
-- IAM user > assume role > IAM role > do stuffs
-- best practice is to grant the permission to roles and then grant the users permission to assume that role i.e. role-based access control (RBAC)
-  - temporary credentials instead of static: when assuming roles, a temporary ACCESS_KEY and S
-
-#### Trust Relationship
-
-- role assumption need to be allowed from both sides
-- TODO: diagram user A assuming role
-
-## Resource Actions
-
-- each service has its own set of actions
-- tip: google "\<service> iam actions" and select the "Actions, resources, and conditions for \<service>"
-
-## Conditions
-
-- additional constraint to limit the granted permission
-- can be used for implementing ABAC
-
-## Attribute-based Access Control (ABAC)
-
-- more scalable way of doing permissions
-- grants permissions based on resource tags
-- example: allow delete resource to only roles with tag `isAdmin: true`
-
-## Resource-based policies
-
-- some services e.g. S3 allow using resource-based policy
-- policy is attached to the resource directly instead of granted to any principal (user/role)
-
-## Troubleshooting permission issues
-
-- READ THE ERROR MESSAGE
-- it usually tells you which principal is missing permision to do which actions
+Run the app and see what we get.
 
 ```
-# without any policies attached
-$ aws eks list-clusters --profile pokgak-user
-
-An error occurred (AccessDeniedException) when calling the ListClusters operation: User: arn:aws:iam::058264261389:user/pokgak is not authorized to perform: eks:ListClusters on resource: arn:aws:eks:ap-southeast-1:058264261389:cluster/*
+$ go run main.go
 ```
+
+### Error: No valid providers in chain
+
+- AWS SDK [default credentials provider chain](https://docs.aws.amazon.com/sdkref/latest/guide/standardized-credentials.html#credentialProviderChain)
+- Default credential provider chain go SDK:
+  1. Environment variables.
+  1. Shared credentials file.
+  1. If your application uses an ECS task definition or RunTask API operation, IAM role for tasks.
+  1. If your application is running on an Amazon EC2 instance, IAM role for Amazon EC2.
+
+## Create an IAM user
+
+- use an IAM user to authenticate ourself
+  
+### Failed to list S3 buckets: AccessDenied
+
+- AWS IAM default will deny all actions that is not exlicitly granted to the principal
+- How to grant permission?
+  - attach permission to the user directly (not scalable)
+  - attach permission to an IAM group
+
+### IAM Policy document structure
+
+- IAM policies must have **actions, effect, and resource**.
+- Each AWS service has its own set of actions
+  * tip: google "\<service> iam actions" and select the "Actions, resources, and conditions for \<service>"
+
+Example policy to allow listing all S3 buckets in the account:
+```
+{
+    "Statement": [
+        {
+            "Action": "s3:ListAllMyBuckets",
+            "Effect": "Allow",
+            "Resource": "*"
+        }
+    ],
+    "Version": "2012-10-17"
+}
+```
+
+## Managing user permission using groups
+
+- add users to the group
+- attach policy to the group
+- all users in the group will inherit the group policy
+
+### Authenticating using roles
+
+Services should have their own identity instead of using IAM user. Lets create a role for the service and allow members from the `developers` group to assume the role.
+
+- what's the difference between roles and users?
+  * roles have [temporary credentials](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html)
+- assuming role need two way permission
+  1. grant permission to the group to assume the role
+  1. add the users to the role trust relationship (assume role policy)
+- how do we assume role locally?
+  * configure the role profile inside local aws config file `~/.aws/credentials` or `~/.aws/config`
+  ```
+  [test-service]
+  source_profile=default
+  role_arn=arn:aws:iam::058264261389:role/test-service
+  ```
+  * set the `AWS_PROFILE=developer` env when running the application
+
+## Running the application inside EC2
+
