@@ -76,3 +76,49 @@ Services should have their own identity instead of using IAM user. Lets create a
 
 ## Running the application inside EC2
 
+lets deploy our application to EC2 and run it from there.
+
+- build the application binary (GOOS to build linux binary since I'm on Mac):
+  ```
+  $  GOOS=linux go build -o test-app-linux main.go
+  ```
+- push the binary to our EC2 and run our app:
+  ```
+  $ scp ./test-app-linux test-server:
+  $ ssh test-server
+  $ ls
+  test-app-linux
+  $ ./test-app-linux
+  Failed to get caller identity: NoCredentialProviders: no valid providers in chain
+  caused by: EnvAccessKeyNotFound: failed to find credentials in the environment.
+  SharedCredsLoad: failed to load profile, .
+  AssumeRoleUnauthorizedAccess: EC2 cannot assume the role test-service.  Please see documentation at https://docs.aws.amazon.com/IAM/latest/UserGuide/troubleshoot_iam-ec2.html#troubleshoot_iam-ec2_errors-info-doc.
+  ```
+
+### Error: EC2 cannot assume the role test-service
+
+For EC2 to be able to assume our role, we need to add the EC2 service into our role trust relationship.
+
+Add the following statement to test-service trust relationship:
+```
+Statement{
+  {
+      "Effect": "Allow",
+      "Principal": {
+          "Service": "ec2.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+  }
+}
+```
+
+## Summary
+
+What we've done:
+
+- create access key for IAM user
+- use groups to manage user permissions
+- create roles and allow users to assume
+- use roles to manage our test-service permissions
+- attach roles to EC2 instances using instance profile
+- run application from EC2 instance
