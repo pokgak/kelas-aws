@@ -1,6 +1,7 @@
 resource "aws_iam_role" "test_service" {
     name = "test-service"
     assume_role_policy = data.aws_iam_policy_document.test_service_assume_role_policy.json
+    force_detach_policies = true
 }
 
 data "aws_iam_policy_document" "test_service_assume_role_policy" {

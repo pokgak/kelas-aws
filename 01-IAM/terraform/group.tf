@@ -13,6 +13,11 @@ resource "aws_iam_group_membership" "developers" {
   group = aws_iam_group.developers.name
 }
 
+resource "aws_iam_group_policy_attachment" "list_s3_bucket" {
+    group       = aws_iam_group.developers.name
+    policy_arn = aws_iam_policy.list-s3-buckets.arn
+}
+
 data "aws_iam_policy_document" "assume_role" {
     statement {
       actions = ["sts:AssumeRole"]
