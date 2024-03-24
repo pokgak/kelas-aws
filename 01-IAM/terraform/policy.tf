@@ -1,7 +1,7 @@
 data "aws_iam_policy_document" "list-s3-buckets" {
     statement {
         actions = [
-        "s3:ListAllMyBuckets",
+            "s3:ListAllMyBuckets",
         ]
     
         resources = ["*"]

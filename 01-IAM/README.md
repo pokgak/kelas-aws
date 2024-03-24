@@ -56,7 +56,9 @@ Example policy to allow listing all S3 buckets in the account:
 - attach policy to the group
 - all users in the group will inherit the group policy
 
-### Authenticating using roles
+## Authenticating using roles
+
+![](./iam-roles.png)
 
 Services should have their own identity instead of using IAM user. Lets create a role for the service and allow members from the `developers` group to assume the role.
 
